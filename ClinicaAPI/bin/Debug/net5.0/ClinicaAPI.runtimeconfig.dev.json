@@ -1,0 +1,8 @@
+{
+  "runtimeOptions": {
+    "additionalProbingPaths": [
+      "C:\\Users\\Erol\\.dotnet\\store\\|arch|\\|tfm|",
+      "C:\\Users\\Erol\\.nuget\\packages"
+    ]
+  }
+}
