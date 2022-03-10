@@ -1,0 +1,13 @@
+name: primulProiectShiny
+title: primulProiectShiny
+username:
+account: mxrtinax
+server: shinyapps.io
+hostUrl: https://api.shinyapps.io/v1
+appId: 5523046
+bundleId: 5513915
+url: https://mxrtinax.shinyapps.io/primulProiectShiny/
+when: 1643281097.08225
+lastSyncTime: 1643281097.08225
+asMultiple: FALSE
+asStatic: FALSE

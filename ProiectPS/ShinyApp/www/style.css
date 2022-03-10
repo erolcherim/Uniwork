@@ -1,0 +1,46 @@
+/* Get a fancy font from Google Fonts */
+@import url('https://fonts.googleapis.com/css2?family=Yusei+Magic&display=swap');
+
+body {
+  background-color: #2a3636;
+  color: white; /* text color */
+  align-items: center;
+}
+div {
+  align-items: center;
+}
+
+/* Change header text to imported font Yusei Magic*/
+h2, a, p {
+  font-family: 'Times New Roman', sans-serif;
+}
+
+/* Make text visible on inputs */
+.shiny-input-container {
+  color: white;
+}
+.js-irs-0 .irs-bar {
+border-top-color: #88CFCF;
+border-bottom-color: #88CFCF;
+} 
+
+.js-irs-0 .irs-bar-edge {
+border-color: #88CFCF;
+}
+
+.js-irs-0 .irs-single, .js-irs-0 .irs-bar-edge, .js-irs-0 .irs-bar {
+background: #88CFCF;
+}
+
+.js-irs-1 .irs-bar {
+border-top-color: #10d010;
+border-bottom-color: #10d010;
+} 
+
+.js-irs-1 .irs-bar-edge {
+border-color: #10d010;
+}
+
+.js-irs-1 .irs-single, .js-irs-1 .irs-bar-edge, .js-irs-1 .irs-bar {
+background: #0a0;
+}

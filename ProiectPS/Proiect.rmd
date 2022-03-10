@@ -1,0 +1,351 @@
+---
+title: "Proiect P&S - Analiza set date esoph"
+author: "Cherim Erol, Roman Robert, Martinas Paul"
+date: "28/1/2022"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## Descrierea setului de date
+
+Proiectul trateaza partea teoretica si practica (grafice/tabele) a unei
+probleme de interes public pe baza setului de date "esoph" din R.
+
+Scopul proiectului este stabilirea conexiunii intre rata cancerului esofagial si 3 variabile:  
+
+* Varsta  
+* Consum de alcool  
+* Consum de tutun  
+
+Setul de date "esoph" este alcatuit din 88 de intrari, impartite dupa urmatoarele criterii:  
+
+* Categorie de varsta (ani): 25-34, 35-44, 45-54, 55-64, 65-74, 75+  
+* Consum de tutun (g/zi): 0-9, 10-19, 20-29, 30+  
+* Consum de alcool (g/zi): 0-39, 40-79, 80-119, 120+  
+
+Fiecare combinatie unica dintre cele 3 variabile vine insotita de numarul de cazuri de cancer si numarul de cazuri de control.
+
+## Structura setului de date  
+
+Variabile control pentru fiecare coloana:
+
+```{r esoph summary}
+summary(esoph)
+```
+
+Se poate observa structura datelor pentru primele 15 intrari, ce reprezinta datele pentru categoria de varsta 35-44 ani:
+```{r esoph dataset, echo=FALSE}
+esoph[16:30,]
+```
+
+## Manipularea si analiza datelor
+Pentru evidentierea celor mai expuse categorii de varsta trebuie realizata distributia procentajului de cazuri de cancer `ncases` normalizata in functie de suma numarului cazurilor de control pentru fiecare categorie `sum(ncontrols)`.  
+
+Din cauza naturii structurii setului, datele trebuie agregate in functie de categoria de varsta.  
+
+Obiectul `cases_by_age` reprezinta numarul total (`FUN=sum`) de cazuri de cancer `ncases` pentru fiecare cateogire de varsta, calculat cu functia `aggregate`.
+
+```{r esoph cases_by_age}
+cases_by_age <- aggregate(esoph$ncases, by=list(agegp = esoph$agegp), FUN = sum)
+cases_by_age
+```
+
+Obiectul `controls_by_age` reprezinta numarul total de control `ncotrols` pentru fiecare categorie de varsta. Se calculeaza de asemenea cu ajutorul functiei `aggregate`.
+
+```{r esoph controls_by_age}
+controls_by_age <- aggregate(esoph$ncontrols, by=list(agegp = esoph$agegp), FUN = sum)
+controls_by_age
+```
+
+Vectorul `percentage_of_total` contine procentul de cazuri de cancer `ncases` din numarul de cazuri de control `ncontrols`.  
+```{r esoph percentage of total}
+percentage_of_total <- cases_by_age$x * 100 / controls_by_age$x
+```
+
+### Distributia procentului cazurilor de cancer in functie de categoria de varsta  
+
+```{r esoph plot1, fig.align="center"}
+vect_col <- c("hotpink", "green", "blue", "red", "yellow", "cyan")
+
+barplot ( height = percentage_of_total,
+          names.arg = cases_by_age$agegp,
+          xlab = "Categorie de varsta",
+          ylab = "Procentaj de cazuri",
+          col = vect_col,
+          )
+```
+
+Se observa cresterea cazurilor de cancer odata cu varsta, cele mai vulnerbaile categorii de varsta fiind 55-64, 65-74, 75+. Pentru observarea efectelor fiecarei substante, se realizeaza distributia consumului de alcool/tutun pentru fiecare categorie de varsta/categorie de consum.  
+
+Datele trebuie grupate in functie de categoria de varsta si consumul de tutun. Se genereaza subsetul `tob1` ce contine toate intrarile din setul de date ce se incadreaza in categoria de consum `"0-9g/day"`. Se pot observa primele 10 intrari pentru subsetul `tob1`.  
+
+```{r esoph tob1}
+tob1 <- subset(esoph, subset = tobgp == "0-9g/day")
+head(tob1,10) 
+```
+Obiectul `cases_by_age_tobacco1` reuneste variabilele `ncases`, `ncontrols`, grupate in functie de fiecare categorie de varsta. Se folosesc functiile `cbind` si `aggregate`.
+```{r esoph cases_by_age_tobacco1}
+cases_by_age_tobacco1 <- aggregate(cbind(ncases=tob1$ncases, ncontrols= tob1$ncontrols), by=list(interv_varsta = tob1$agegp), FUN=sum)
+cases_by_age_tobacco1
+```
+Se genereaza vectorul `proc_tob1` ce contine procentul de cazuri de cancer pentru fiecare categorie de varsta, pentru categoria de consum `"0-9g/day"`.
+```{r esoph percentage tobacco 0-9}
+proc_tob1 <- cases_by_age_tobacco1$ncases*100/cases_by_age_tobacco1$ncontrol
+proc_tob1
+```
+## Distributia procentajului cazurilor de cancer pentru consumatorii de tutun in fucntie de categoria de varsta
+
+Se genereaza plotul ce evidentiaza procentul `proc_tob1` de cazuri de cancer raportat la categoria de varsta `agegp` pentru categoria de consum `"0-9g/day"`.
+```{r esoph plot2, fig.width=5, fig.align="center"}
+barplot(proc_tob1,
+        names.arg = cases_by_age$agegp,
+        main = "Categorie 0-9g/day",
+        xlab = "Categorie varsta",
+        ylab = "Procentaj cazuri",
+        col = "blue",
+        beside=TRUE,
+        )
+```
+  
+Analog si pentru celelalte categorii de consum:
+
+* 10-19g/day
+* 20-29g/day
+* 30+g/day
+```{r esoph tobacco percentage others, eval=TRUE}
+tob2 <- subset(esoph, subset = tobgp == "10-19")
+cases_by_age_tobacco2 <- aggregate(cbind(tob2$ncases, tob2$ncontrols), by=list(agegp = tob2$agegp), FUN=sum)
+cases_by_age_tobacco2
+proctb2 <- cases_by_age_tobacco2$V1*100/cases_by_age_tobacco2$V2
+proctb2
+
+tob3 <- subset(esoph, subset = tobgp == "20-29")
+cases_by_age_tobacco3 <- aggregate(cbind(tob3$ncases, tob3$ncontrols), by=list(agegp = tob3$agegp), FUN=sum)
+cases_by_age_tobacco3
+proctb3 <- cases_by_age_tobacco3$V1*100/cases_by_age_tobacco3$V2
+proctb3
+tob4 <- subset(esoph, subset = tobgp == "30+")
+cases_by_age_tobacco4 <- aggregate(cbind(tob4$ncases, tob4$ncontrols), by=list(agegp = tob4$agegp), FUN=sum)
+cases_by_age_tobacco4
+proctb4 <- cases_by_age_tobacco4$V1*100/cases_by_age_tobacco4$V2
+proctb4
+```
+Si ploturile `barplot` aferente:  
+```{r, figures-side, fig.show="hold", out.width="50%", fig.align="center"}
+barplot(proctb2,
+        names.arg = cases_by_age$agegp,
+        main = "Categorie 10-19g/day",
+        xlab = "Categorie varsta",
+        ylab = "Procentaj cazuri",
+        col = "red",
+        beside=TRUE,
+        )
+barplot(proctb3,
+        names.arg = cases_by_age$agegp,
+        main = "Categorie 20-29g/day",
+        xlab = "Categorie varsta",
+        ylab = "Procentaj cazuri",
+        col = "yellow",
+        beside=TRUE,
+        )
+barplot(proctb4,
+        names.arg = cases_by_age$agegp,
+        main = "Categorie 30+g/day",
+        xlab = "Categorie varsta",
+        ylab = "Procentaj cazuri",
+        col = "green",
+        beside=TRUE,
+        )
+```
+  
+Dupa cum se poate observa din graficul `"30+g/day"`, in categoriile tinere de varsta, respectiv `25-34` si `35-44` nu se depisteaza cazuri de cancer esofagian, de unde se poate observa o crestere a consumului de tutun odata cu varsta. (Categoriile predispuse la un consum mai mare de tutun sunt cele mai in varsta).
+
+Pentru unificarea celor 4 grafice se foloseste functia `cbind`, in variabila `tob_t`.
+```{r}
+tob_t <- cbind("0-9"=proc_tob1, "10-19"=proctb2, "20-29"=proctb3, "30+"=proctb4)
+tob_t
+```
+Se realizeaza graficul pentru obiectul `tob_t`, ce reuneste toate categoriile de consum.
+```{r, fig.size="15", fig.align="center"}
+vect_col4 <- c("blue", "red", "yellow", "green")
+barplot(t(tob_t),
+        main = "Distributia procentajelor cazurilor de 
+        cancer pentru fiecare categorie de consum de tutun",
+        names.arg = cases_by_age$agegp,
+        xlab = "Categorie varsta",
+        ylab = "Procentaj cazuri",
+        col = vect_col4,
+        beside=TRUE,
+        )
+legend("topleft", legend=c("0-9g/day","10-19g/day","20-29g/day","30+g/day"), fill=vect_col4)
+```
+In graficul anterior, se pot observa urmatoarele:
+
+* Riscul de cancer creste direct proportional cu varsta
+* Riscul de cancer creste direct proportional cu cantitatea de tutun consumata
+* Riscul de cancer se dubleaza pentru consumatorii de mai mult de 30 degrame de tutun pe zi
+
+## Distributia procentului cazurilor de cancer pentru fiecare categorie de consum de alcool
+
+Analog se genereaza un grafic si pentru categoriile de consum de alcool
+
+```{r, fig.size="15", fig.align="center"}
+alc1 <- subset(esoph, subset = alcgp == "0-39g/day")
+cases_by_age_alcohol1 <- aggregate(cbind(alc1$ncases, alc1$ncontrols), by=list(agegp = alc1$agegp), FUN=sum)
+cases_by_age_alcohol1
+procalc1 <- cases_by_age_alcohol1$V1*100/cases_by_age_alcohol1$V2
+procalc1
+
+alc2 <- subset(esoph, subset = alcgp == "40-79")
+cases_by_age_alcohol2 <- aggregate(cbind(alc2$ncases, alc2$ncontrols), by=list(agegp = alc2$agegp), FUN=sum)
+cases_by_age_alcohol2
+procalc2 <- cases_by_age_alcohol2$V1*100/cases_by_age_alcohol2$V2
+procalc2
+
+alc3 <- subset(esoph, subset = alcgp == "80-119")
+cases_by_age_alcohol3 <- aggregate(cbind(alc3$ncases, alc3$ncontrols), by=list(agegp = alc3$agegp), FUN=sum)
+cases_by_age_alcohol3
+procalc3 <- cases_by_age_alcohol3$V1*100/cases_by_age_alcohol3$V2
+procalc3
+
+alc4 <- subset(esoph, subset = alcgp == "120+")
+cases_by_age_alcohol4 <- aggregate(cbind(alc4$ncases, alc4$ncontrols), by=list(agegp = alc4$agegp), FUN=sum)
+cases_by_age_alcohol4
+procalc4 <- cases_by_age_alcohol4$V1*100/cases_by_age_alcohol4$V2
+procalc4
+
+#-------------------------------------------------------------------------------------
+alc_t <- cbind("0-39"=procalc1, "40-79"=procalc2, "80-119"=procalc3, "120+"=procalc4)
+vect_col5 <- c("blue", "red", "yellow", "green")
+barplot(t(alc_t),
+        main = "Distributia procentajelor cazurilor de 
+        cancer pentru fiecare categorie de consum de alcool",
+        names.arg = cases_by_age$agegp,
+        xlab = "Categorie varsta",
+        ylab = "Procentaj cazuri",
+        col = vect_col5,
+        beside=TRUE,
+)
+legend("topleft", legend=c("0-39g/day","40-79g/day","80-119g/day", "120+g/day"), fill=vect_col4)
+```
+
+In graficul anterior, se pot observa urmatoarele:
+
+* Riscul de cancer creste direct proportional cu varsta
+* Riscul de cancer creste direct proportional cu cantitatea de alcool consumata
+* Riscul de cancer se tripleaza pentru consumatorii de mai mult de 120 de grame de alcool pe zi pentru categoria de varsta `45-54`
+* Consumul moderat de alcool la categoriile de varsta `25-34`, `35-44` are un efect minim asupra riscului de cancer esofagian
+
+## Risk-Calculator
+
+Aplicatia Shiny foloseste functia `probabilitate` pentru estima riscul aparitiei cancerului unui individ conform setului de date, in functie de urmatorul input:
+
+* varsta
+* consum alcool zilnic
+* consum tutun zilnic
+
+```{r functie, eval=TRUE}
+probabilitate <- function (age, alc, tob)
+{
+  if(age<25)
+  {
+    stop("Varsta minima este 25")
+  }
+  if(age>=25&&age<=34)
+  {
+    vage <- subset(esoph, subset = agegp == "25-34")
+  }
+  if(age>=35&&age<=44)
+  {
+    vage <- subset(esoph, subset = agegp == "35-44")
+  }
+  if(age>=45&&age<=54)
+  {
+    vage <- subset(esoph, subset = agegp == "45-54")
+  }
+  if(age>=55&&age<=64)
+  {
+    vage <- subset(esoph, subset = agegp == "55-64")
+  }
+  if(age>=65&&age<=74)
+  {
+    vage <- subset(esoph, subset = agegp == "65-74")
+  }
+  if(age>=75)
+  {
+    vage <- subset(esoph, subset = agegp == "75+")
+  }
+  
+  
+  if(alc<0)
+  {
+    stop("Cantatitea de alcool nu poate fi negativa")
+  }
+  if(alc>=0&&alc<=39)
+  {
+    valc <- subset(vage, subset = alcgp == "0-39g/day")
+  }
+  if(alc>=40&&alc<=79)
+  {
+    valc <- subset(vage, subset = alcgp == "40-79")
+  }
+  if(alc>=80&&alc<=119)
+  {
+    valc <- subset(vage, subset = alcgp == "80-119")
+  }
+  if(alc>=120)
+  {
+    valc <- subset(vage, subset = alcgp == "120+")
+  }
+  
+  if(tob<0)
+  {
+    stop("Cantatitea de tutun nu poate fi negativa")
+  }
+  if(tob>=0&&tob<=0)
+  {
+    vtob <- subset(valc, subset = tobgp == "0-9g/day")
+  }
+  if(tob>=10&&tob<=19)
+  {
+    vtob <- subset(valc, subset = tobgp == "10-19")
+  }
+  if(tob>=20&&tob<=29)
+  {
+    vtob <- subset(valc, subset = tobgp == "20-29")
+  }
+  if(tob>=30)
+  {
+    vtob <- subset(valc, subset = tobgp == "30+")
+  }
+  if(length(vtob$ncases)>0)
+  {
+    controlsage <- sum(vage$ncontrols)
+    result <- vtob$ncases*100/controlsage
+    return(result)
+  }
+  else
+  {
+    warning("Nu exista memorata combinatia de valori")
+  }
+} 
+```
+Spre exemplu, conform setului de date, sansa aparitiei cancerului esofagian pentru un individ cu urmatoarele caracteristici:
+
+* `varsta = 64` ani
+* `consum_alcool =` 100g/zi
+* `consum_tutun =` 40g/zi  
+
+este de:
+```{r ex1}
+probabilitate(64, 100, 18)
+```
+%
+
+## Probleme întâlnite:  
+
+Pe versiunea de RStudio a colegilor mei (cea de Windows), setul de date `esoph` contine date eronate pentru ultimele intrari (Categoria de varsta 75+). Numarul de ncases>ncontrols (se depisteaza 1 caz din 0 pacienti), lucru care afecteaza procentul cazurilor depistate.
+Spre exemplu, pt categoria de varsta 75+, exista 8 ncases depistate din 5 ncontrols, deci procentajul de cazuri depistate este 160% (lucru care nu este posibil). Acest lucru afecteaza manipularea si analiza datelor.
